@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -28,13 +29,13 @@ class _MyQiblaState extends State<MyQibla> {
     });
   }
 
-  Builder _sectionBuilder(BuildContext context) {
+  Builder _sectionBuilder() {
     return Builder(builder: (context) {
-     if (_permissionStatus) {
-       return _compassSection();
-     } else {
-       return _noLocationAccessSection();
-     }
+      if (_permissionStatus) {
+        return _compassSection();
+      } else {
+        return _noLocationAccessSection();
+      }
     });
   }
 
@@ -59,19 +60,46 @@ class _MyQiblaState extends State<MyQibla> {
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           Text("Please allow the application to access location"),
+          CupertinoButton(child: Text("Allow Location Usage"), onPressed: () {
+            Permission.locationWhenInUse.request().then((statusVal) {
+              _getPermissionStatus();
+            });
+          }),
+          CupertinoButton(
+              child: Text("Allow Permission Manually"), onPressed: () {
+            openAppSettings().then((statusVal) => null);
+          })
         ],
       ),
     );
   }
 
+  StreamBuilder _compassBuilder() {
+    return StreamBuilder<CompassEvent>(stream: FlutterCompass.events, builder: (context, snapshot) {
+      double? _bearingVal = snapshot.data!.heading;
+
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      }
+      if (snapshot.hasError) {
+        return Text("Error encountered! ${snapshot.error}");
+      }
+      if (_bearingVal == null) {
+        return Text("This device does not have the required sensor(s)");
+      }
+
+      return //TODO make the compass section
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text("Qibla Pointer"),
-      ),
-      body:
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Text("Qibla Pointer"),
+        ),
+        body:
     );
   }
 }
